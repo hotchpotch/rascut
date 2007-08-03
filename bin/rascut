@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+
+begin
+  require 'rascut'
+rescue LoadError
+  require 'rubygems'
+  require 'rascut'
+end
+
+Rascut::Command.new.run ARGV
