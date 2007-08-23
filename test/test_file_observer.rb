@@ -4,6 +4,7 @@ require 'rascut/file_observer'
 require 'test/unit'
 require 'tmpdir'
 require 'pathname'
+$DEBUG = true
 
 class FileObserverTest < Test::Unit::TestCase
   def setup
@@ -21,12 +22,32 @@ class FileObserverTest < Test::Unit::TestCase
     @fo.run
   end
 
-  def call_update_handler#(files)
+  def call_update_handler(files)
     @call_update_handler_flag = true
   end
 
   def save_files(files)
     @update_files << files
+  end
+
+  def test_dir
+    sleep 1.1
+    @tmpdir.join('foo').mkpath
+    sleep 1.1
+    assert !@call_update_handler_flag
+
+    @tmpdir.join('foo/foo.txt').open('w') {|f| f.puts 'file'}
+    sleep 1.1
+    assert @call_update_handler_flag
+    @call_update_handler_flag = false
+
+    @tmpdir.join('foo/foo').mkpath
+    sleep 1.1
+    assert !@call_update_handler_flag
+
+    @tmpdir.join('foo/foo/foo.txt').open('w') {|f| f.puts 'file'}
+    sleep 1.1
+    assert @call_update_handler_flag
   end
 
   def test_fileput

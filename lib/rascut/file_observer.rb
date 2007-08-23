@@ -54,7 +54,11 @@ module Rascut
 
       unless update_files.empty?
         @update_handlers.each do |handler|
-          handler.call update_files
+          if handler.arity == 1
+            handler.call update_files
+          else
+            handler.call
+          end
         end
       end
     end
@@ -78,7 +82,11 @@ module Rascut
         end
       end
       dfiles.uniq.each do |file|
-        file_observe file, Time.at(0)
+        if file.directory?
+          dir_observe file
+        else
+          file_observe file, Time.at(0)
+        end
       end
     end
     
