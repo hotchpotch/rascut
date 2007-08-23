@@ -70,11 +70,11 @@ module Rascut
           @dirs[dir] = dir.mtime
 
           if @options[:ext]
-            e = '.' + @options[:ext].join(',')
+            e = '.{' + @options[:ext].join(',') + '}'
           else
             e = ''
           end
-          dfiles.concat Pathname.glob(dir.to_s + "/{*,**/*}{#{e}}")
+          dfiles.concat Pathname.glob(dir.to_s + "/{**/*}#{e}")
         end
       end
       dfiles.uniq.each do |file|

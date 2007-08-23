@@ -1,5 +1,6 @@
 require 'expect'
 require 'thread'
+require 'rascut/file_observer'
 
 module Rascut
   class FcshWrapper
@@ -7,24 +8,17 @@ module Rascut
     FCSH_WAIT_RE = /^\(fcsh\)\s*$/
 
     attr_accessor :original_files, :files, :config, :target_script, :hooks
-    def initialize(target_script, config, original_files = [])
+    def initialize(target_script, config)
       @target_script = target_script
       @config = config
 
-      set_original_files(original_files)
       @compile_id = nil
       @hooks = {}
       @mutex = Mutex.new
       @compile_mutex = Mutex.new
     end
 
-    def set_original_files(of)
-      @original_files = of
-      files_setting()
-    end
-
     def reload!
-      files_setting()
       if @compile_id
         process_sync_exec("clear #{@compile_id}")
         @compile_id = nil
@@ -41,13 +35,6 @@ module Rascut
       res
     end
 
-    def run
-      loop do
-        compile() if file_update?
-        sleep [@config.params[:interval], 1].max
-      end
-    end
-
     def close
       if @process
         #logger.info process_sync_exec('quit', false)
@@ -57,39 +44,12 @@ module Rascut
     end
 
     def logger
-      @config.params[:logger]
-    end
-
-    def files_setting
-      @files = {}
-      [@target_script, @original_files].flatten.uniq.each do |file|
-        @files[Pathname.new(file)] = Time.at(0)
-      end
-    end
-
-    def file_update?
-      update_files = []
-      @files.each do |file, timestamp|
-        if !file.file? 
-          logger.warn "#{file} not found..."
-          @files.delete file
-        elsif file.mtime > timestamp
-          update_files << file.basename.to_s
-          @files[file] = file.mtime
-        end
-      end
-      update_files.uniq!
-      if update_files.empty?
-        false
-      else
-        logger.info "Found update files: #{update_files.join(' ')}"
-        @hooks.call if @hooks[:file_update]
-        true
-      end
+      @config[:logger]
     end
 
     def mxmlc_cmd
-      ['mxmlc', @config.params[:compile_options], @target_script].join(' ')
+      #p @config[:compile_options]
+      ['mxmlc', @config[:compile_options], @target_script].join(' ')
     end
 
     def compile
@@ -98,7 +58,7 @@ module Rascut
       @compile_mutex.synchronize do
         logger.info "Compile Start"
         out = nil
-        @process = IO.popen(@config.params[:fcsh_cmd] + ' 2>&1', 'r+') unless @process
+        @process = IO.popen(@config[:fcsh_cmd] + ' 2>&1', 'r+') unless @process
         if @compile_id
           out = process_sync_exec "compile #{@compile_id}"
         else

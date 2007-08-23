@@ -21,7 +21,7 @@ class FileObserverTest < Test::Unit::TestCase
     @fo.run
   end
 
-  def call_update_handler(files)
+  def call_update_handler#(files)
     @call_update_handler_flag = true
   end
 

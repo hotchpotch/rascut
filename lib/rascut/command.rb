@@ -7,7 +7,8 @@ require 'yaml'
 
 module Rascut
   class Command
-    OBSERVE_EXT = %w(as mxml)
+    OBSERVE_EXT = %w(as mxml css)
+
     def initialize
       @logger = Logger.new(STDOUT)
     end
@@ -32,16 +33,28 @@ module Rascut
       end
 
       @root = Pathname.new(@target_script).dirname.realpath
-      files = observe_files()
-      @wrapper = FcshWrapper.new(@target_script, @config, files)
-      start_server if @config.params[:server] && !@config.params[:apollo]
-      apollo() if @config.params[:apollo]
-      setting_signals()
+      @wrapper = FcshWrapper.new(@target_script, @config)
+
+      start_server if @config[:server]
+      setting_signals
       @wrapper.hooks[:compile_success] = method(:compile_success_proc)
-      read_log_loop() if @config.params[:flashlog] 
-      @wrapper.run
+      @file_observer = FileObserver.new(@config[:observe_files], 
+                                        :interval => @config[:interval],
+                                        :ext => @config[:ext],
+                                        :update_handler => method(:file_update_handler)
+                                       )
+
+      read_log_loop if @config[:flashlog] 
+      @file_observer.run
+
+      @wrapper.compile 
+      Thread.stop
     end
     attr_reader :config, :root, :target_script
+
+    def file_update_handler
+      @wrapper.compile
+    end
 
     def apollo
       create_appolo_xml_template
@@ -148,32 +161,32 @@ EOF
       @wrapper.compile
     end
 
-    def observe_files
-      e = ext @config
-      if !@config.params[:observe_files].empty?
-        res = []
-        @config.params[:observe_files].each do |f|
-          f = Pathname.new(f)
-          if f.file? && e.split(',').include?(f.extname.sub(/^\./, ''))
-            res << f.to_s
-          elsif f.directory?
-            res.concat Dir.glob(f.to_s + "/{*,**/*}.{#{e}}")
-          end
-        end
-        res.uniq
-      else
-        res = Dir.glob(@root.to_s + "/{*,**/*}.{#{e}}")
-      end
-      # delete -keep generated files
-      res.delete_if {|f| f.to_s.match('/generated/') }
-    end
+    #def observe_files
+    #  e = ext @config
+    #  if !@config.params[:observe_files].empty?
+    #    res = []
+    #    @config.params[:observe_files].each do |f|
+    #      f = Pathname.new(f)
+    #      if f.file? && e.split(',').include?(f.extname.sub(/^\./, ''))
+    #        res << f.to_s
+    #      elsif f.directory?
+    #        res.concat Dir.glob(f.to_s + "/{*,**/*}.{#{e}}")
+    #      end
+    #    end
+    #    res.uniq
+    #  else
+    #    res = Dir.glob(@root.to_s + "/{*,**/*}.{#{e}}")
+    #  end
+    #  # delete -keep generated files
+    #  res.delete_if {|f| f.to_s.match('/generated/') }
+    #end
 
-    def ext(config)
-      e = OBSERVE_EXT.join ','
-      if config.params[:ext]
-        e << ',' + config.params[:ext].strip
-      end
-      e
-    end
+    #def ext(config)
+    #  e = OBSERVE_EXT.join ','
+    #  if config.params[:ext]
+    #    e << ',' + config.params[:ext].strip
+    #  end
+    #  e
+    #end
   end
 end
