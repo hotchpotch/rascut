@@ -23,6 +23,10 @@ module Rascut
       @params[name]
     end
 
+    def logger
+      @params[:logger]
+    end
+
     def parse_argv!(argv)
       op = OptionParser.new
       op.banner = 'Usage: $ rascut HelloWrold.as'
@@ -51,10 +55,14 @@ module Rascut
 
       op.on('-i=VAL', '--interval=VAL', 'interval time(min)') {|v| @params[:interval] = v.to_i }
       op.on('-l=VAL', '--log=VAL', 'showing flashlog.txt') {|v| @params[:flashlog] = v }
+      op.on('-m=VAL', 'server mapping path :example) -m "../assets=assets" -m "../images/=img"') {|v| 
+        @params[:mapping] ||= []
+        @params[:mapping] << v.split('=', 2)
+      }
       op.on('--no-file-observe', "don't observing files") {|v| @params[:file_observing] = false }
       op.on('--observe-ext=VAL', 'observe ext ex:) --observe-ext="as3,actionscript3,css,mxml"') {|v| @params[:ext] = v.split(',') }
       op.on('--server', '-s', 'start autoreload webserver') {|v| @params[:server] = true }
-      op.on('--server-handler=val', 'set server hander ex:) --server-handler=webrick') {|v| @params[:server] = v }
+      op.on('--server-handler=val', 'set server hander :example) --server-handler=webrick') {|v| @params[:server] = v }
       op.on('--port=val', '-p=val', 'server port(default: 3001)') {|v| @params[:port] = v.to_i }
       op.on('-t=VAL', '--template=VAL', 'server use template file') {|v| @params[:template] = v }
       op.on('-v', '--verbose', 'detail messages') {|v| @params[:logger].level = Logger::DEBUG }
