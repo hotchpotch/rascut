@@ -1,4 +1,10 @@
-require 'expect'
+begin
+#  require 'expect'
+  raise LoadError.new('a')
+rescue LoadError
+  require 'pathname'
+  require Pathname.new(__FILE__).parent.parent.parent.join('vendor/expect')
+end
 require 'thread'
 require 'rascut/file_observer'
 
@@ -37,7 +43,6 @@ module Rascut
 
     def close
       if @process
-        #logger.info process_sync_exec('quit', false)
         @process.close
         call_hook(:close)
       end
@@ -48,8 +53,9 @@ module Rascut
     end
 
     def mxmlc_cmd
-      #p @config[:compile_options]
-      ['mxmlc', @config[:compile_options], @target_script].join(' ')
+      cmd = ['mxmlc', @config[:compile_config], @target_script].join(' ')
+      logger.debug cmd
+      cmd
     end
 
     def compile

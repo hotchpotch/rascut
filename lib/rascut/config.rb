@@ -31,13 +31,14 @@ module Rascut
       #end
 
       op.on('-b=VAL', '--bind-address=VAL', 'server bind address(default 0.0.0.0)') {|v| @params[:bind_address] = v }
-      op.on('--compile-config=VAL', '-c=VAL', "mxmlc compile config ex:) --compile-config='-benchmark -strict=true'") do |v| 
+      op.on('--compile-config=VAL', '-c=VAL', 'mxmlc compile config ex:) --compile-config="-benchmark -strict=true"') do |v| 
         if @params[:compile_config]
           @params[:compile_config] << ' '  <<  v 
         else
           @params[:compile_config] = v 
         end
       end 
+
       op.on('--fcsh-cmd=VAL', 'fcsh command path') {|v| @params[:fcsh_cmd] = v }
       @params[:observe_files] = []
       op.on('-I=VAL', '--observe-files=VAL', 'observe files and directories path') {|v| @params[:observe_files] << v }
@@ -48,11 +49,12 @@ module Rascut
 
       op.on('-i=VAL', '--interval=VAL', 'interval time(min)') {|v| @params[:interval] = v.to_i }
       op.on('-l=VAL', '--log=VAL', 'showing flashlog.txt') {|v| @params[:flashlog] = v }
-      op.on('--observe-ext=VAL', "observe ext ex:) --observe-ext='as3,actionscript3,css,mxml'") {|v| @params[:ext] = v.split(',') }
-      op.on('--server', "-s", 'start autoreload webserver') {|v| @params[:server] = true }
+      op.on('--observe-ext=VAL', 'observe ext ex:) --observe-ext="as3,actionscript3,css,mxml"') {|v| @params[:ext] = v.split(',') }
+      op.on('--server', '-s', 'start autoreload webserver') {|v| @params[:server] = true }
       op.on('--server-handler=val', 'set server hander ex:) --server-handler=webrick') {|v| @params[:server] = v }
-      op.on('--port=val', "-p=val", 'server port(default: 3001)') {|v| @params[:port] = v.to_i }
-      op.on('-t=VAL', '--template=VAL', "server use template file") {|v| @params[:template] = v }
+      op.on('--port=val', '-p=val', 'server port(default: 3001)') {|v| @params[:port] = v.to_i }
+      op.on('-t=VAL', '--template=VAL', 'server use template file') {|v| @params[:template] = v }
+      op.on('-v', '--verbose', 'detail messages') {|v| @params[:logger].level = Logger::DEBUG }
       op.on('--help', 'show this message') { puts op; Kernel::exit 1 }
       op.parse! argv
     end
