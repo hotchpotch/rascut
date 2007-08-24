@@ -2,6 +2,7 @@
 
 require 'rubygems'
 require 'hoe'
+$LOAD_PATH << './lib'
 require './lib/rascut.rb'
 
 Hoe.new('rascut', Rascut::VERSION) do |p|
