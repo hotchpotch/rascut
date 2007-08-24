@@ -1,11 +1,13 @@
 require 'optparse'
 require 'rascut/logger'
+require 'logger'
 
 module Rascut
   class Config
     DEFAULT_CONFIG  = {
       :interval => 1,
       :compile_config => nil,
+      :file_observing => true,
       :fcsh_cmd => 'fcsh',
       :ext => ['as', 'css', 'mxml'],
       :logger => Rascut::Logger.new(STDOUT),
@@ -13,6 +15,7 @@ module Rascut
 
     def initialize
       @params = DEFAULT_CONFIG.dup
+      @params[:logger].level = ::Logger::INFO
     end
     attr_accessor :params
 
@@ -22,7 +25,6 @@ module Rascut
 
     def parse_argv!(argv)
       op = OptionParser.new
-
       op.banner = 'Usage: $ rascut HelloWrold.as'
 
       #op.on('-a', 'Apollo compile mode') do |v| 
@@ -49,6 +51,7 @@ module Rascut
 
       op.on('-i=VAL', '--interval=VAL', 'interval time(min)') {|v| @params[:interval] = v.to_i }
       op.on('-l=VAL', '--log=VAL', 'showing flashlog.txt') {|v| @params[:flashlog] = v }
+      op.on('--no-file-observe', "don't observing files") {|v| @params[:file_observing] = false }
       op.on('--observe-ext=VAL', 'observe ext ex:) --observe-ext="as3,actionscript3,css,mxml"') {|v| @params[:ext] = v.split(',') }
       op.on('--server', '-s', 'start autoreload webserver') {|v| @params[:server] = true }
       op.on('--server-handler=val', 'set server hander ex:) --server-handler=webrick') {|v| @params[:server] = v }
@@ -57,6 +60,7 @@ module Rascut
       op.on('-v', '--verbose', 'detail messages') {|v| @params[:logger].level = Logger::DEBUG }
       op.on('--help', 'show this message') { puts op; Kernel::exit 1 }
       op.parse! argv
+      @params[:logger].debug 'config' + @params.inspect
     end
 
     def merge_config(file)

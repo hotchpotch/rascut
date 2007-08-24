@@ -1,5 +1,6 @@
 require 'pathname'
 require 'find'
+require 'logger'
 
 module Rascut
   class FileObserver
@@ -7,6 +8,7 @@ module Rascut
       :interval => 1,
       :ignore_files => [],
       :ignore_dirs => [],
+      :logger => Logger.new(STDOUT),
       :ext => nil
     }
 
@@ -23,8 +25,11 @@ module Rascut
 
       observe files
     end
-
     attr_accessor :options
+
+    def logger
+      options[:logger]
+    end
 
     def run
       if @th
@@ -38,6 +43,18 @@ module Rascut
         end
       end
     end
+
+    def add_update_handler(handler)
+      unless @update_handlers.include? handler
+        @update_handlers << handler
+      end
+    end
+
+    def remove_update_handler(handler)
+      @update_handlers.delete_if {|h| h == handler}
+    end
+
+    private
 
     def update_check
       update_files = []
@@ -124,16 +141,6 @@ module Rascut
           @dirs[dir] ||= dir.mtime
         end
       end
-    end
-
-    def add_update_handler(handler)
-      unless @update_handlers.include? handler
-        @update_handlers << handler
-      end
-    end
-
-    def remove_update_handler(handler)
-      @update_handlers.delete_if{|h| h == handler}
     end
   end
 end 
