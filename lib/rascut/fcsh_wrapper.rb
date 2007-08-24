@@ -1,9 +1,8 @@
 begin
-#  require 'expect'
-  raise LoadError.new('a')
+  require 'expect'
 rescue LoadError
   require 'pathname'
-  require Pathname.new(__FILE__).parent.parent.parent.join('vendor/expect')
+  require Pathname.new(__FILE__).parent.parent.parent.join('vendor/ruby/expect')
 end
 require 'thread'
 require 'rascut/file_observer'

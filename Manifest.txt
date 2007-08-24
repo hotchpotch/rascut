@@ -4,4 +4,13 @@ README.txt
 Rakefile
 bin/rascut
 lib/rascut.rb
+lib/rascut/command.rb
+lib/rascut/config.rb
+lib/rascut/fcsh_wrapper.rb
+lib/rascut/file_observer.rb
+lib/rascut/httpd.rb
+lib/rascut/logger.rb
+vendor/ruby/expect.rb
+vendor/js/swfobject.js
 test/test_rascut.rb
+test/test_file_observer.rb
