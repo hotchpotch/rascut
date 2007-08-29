@@ -7,8 +7,9 @@ module Rascut
     DEFAULT_OPTIONS = {
       :interval => 1,
       :ignore_files => [],
-      :ignore_dirs => [],
+      :ignore_dirs => [/\/.svn/],
       :logger => Logger.new(STDOUT),
+      :dir_counter => 5,
       :ext => nil
     }
 
@@ -58,7 +59,7 @@ module Rascut
 
     def update_check
       update_files = []
-      check_dirs
+      check_dirs if check_dir?
 
       @files.each do |file, mtime|
         if !file.readable?
@@ -81,12 +82,24 @@ module Rascut
       end
     end
 
+    def check_dir?
+      @check_dir_count ||= options[:dir_counter]
+      if @check_dir_count > options[:dir_counter]
+        @check_dir_count = 0
+      else
+        @check_dir_count += 1
+      end
+      @check_dir_count.zero?
+    end
+
     def check_dirs
       dfiles = []
       @dirs.each do |dir, mtime|
         next if @options[:ignore_dirs].include?(dir.realpath)
 
         if !dir.directory?
+          @dirs.delete dir
+        elsif dir.to_s.match %r{/\.svn|/CVS}
           @dirs.delete dir
         elsif dir.mtime > mtime
           @dirs[dir] = dir.mtime
