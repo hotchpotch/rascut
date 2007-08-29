@@ -15,12 +15,18 @@ module Rascut
     def run(argv)
       @config = Config.new
 
-      if ENV['HOME'] && File.readable?(ENV['HOME'] + '/.rascut')
-        @config.merge_config(ENV['HOME'] + '/.rascut')
+      if ENV['HOME']
+        home = Pathname.new ENV['HOME']
+      end
+
+      home.join('.rascut').mkpath if home
+
+      if home && home.join('.rascutrc').readable?
+        @config.merge_config home.join('.rascutrc')
       end
 
       if File.readable?('.rascut')
-        @config.merge_config(@config, '.rascut')
+        @config.merge_config('.rascut')
       end
 
       @config.parse_argv!(argv)
@@ -35,7 +41,7 @@ module Rascut
 
       start_server if @config[:server]
       setting_signals
-      @wrapper.hooks[:compile_success] = method(:compile_success_proc)
+      @wrapper.hooks[:compile_success] << method(:compile_success_proc)
 
 
       if @config[:file_observing]
@@ -49,11 +55,22 @@ module Rascut
 
       read_log_loop if @config[:flashlog] 
 
+      init_plugins
+
       @wrapper.compile 
       #readline_loop
       Thread.stop
     end
-    attr_reader :config, :root, :target_script
+    attr_reader :config, :root, :target_script, :wrapper, :file_observer
+
+    def init_plugins
+      @config[:plugin].each do |name|
+        klass_name = name.gsub(/(^|_)(.)/) { $2.upcase }
+        logger.info "Load Plugin: #{klass_name}"
+        require "rascut/plugin/#{name}"
+        ::Rascut::Plugin.const_get(klass_name).new(self).run
+      end if @config[:plugin]
+    end
 
     def file_update_handler
       @wrapper.compile

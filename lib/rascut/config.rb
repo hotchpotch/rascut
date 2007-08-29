@@ -55,7 +55,7 @@ module Rascut
 
       op.on('-i=VAL', '--interval=VAL', 'interval time(min)') {|v| @params[:interval] = v.to_i }
       op.on('-l=VAL', '--log=VAL', 'showing flashlog.txt') {|v| @params[:flashlog] = v }
-      op.on('-m=VAL', 'server mapping path :example) -m "../assets=assets" -m "../images/=img"') {|v| 
+      op.on('-m=VAL', '--mapping=VAL', 'server mapping path :example) -m "../assets=assets" -m "../images/=img"') {|v| 
         @params[:mapping] ||= []
         @params[:mapping] << v.split('=', 2)
       }
@@ -64,6 +64,10 @@ module Rascut
       op.on('--server', '-s', 'start autoreload webserver') {|v| @params[:server] = true }
       op.on('--server-handler=val', 'set server hander :example) --server-handler=webrick') {|v| @params[:server] = v }
       op.on('--port=val', '-p=val', 'server port(default: 3001)') {|v| @params[:port] = v.to_i }
+      op.on('--plugin=VAL', 'load plugin(s)') {|v| 
+        @params[:plugin] ||= []
+        @params[:plugin] << v
+      }
       op.on('-t=VAL', '--template=VAL', 'server use template file') {|v| @params[:template] = v }
       op.on('-v', '--verbose', 'detail messages') {|v| @params[:logger].level = Logger::DEBUG }
       op.on('--help', 'show this message') { puts op; Kernel::exit 1 }

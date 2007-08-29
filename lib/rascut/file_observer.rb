@@ -70,7 +70,7 @@ module Rascut
       end
 
       unless update_files.empty?
-        logger.info 'update file(s) found: ' + update_files.map{|f| f.to_s}.inspect
+        logger.info 'Found update file(s)' + update_files.map{|f| f.to_s}.inspect
         @update_handlers.each do |handler|
           if handler.arity == 1
             handler.call update_files

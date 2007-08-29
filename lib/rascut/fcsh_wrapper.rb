@@ -16,11 +16,12 @@ module Rascut
     def initialize(target_script, config)
       @target_script = target_script
       @config = config
-
-      @compile_id = nil
-      @hooks = {}
+      @hooks = Hash.new {|h, k| h[k] = []}
       @mutex = Mutex.new
       @compile_mutex = Mutex.new
+      @compile_id = nil
+      @process = nil
+      @not_first_read = nil
     end
 
     def reload!
@@ -28,7 +29,7 @@ module Rascut
         process_sync_exec("clear #{@compile_id}")
         @compile_id = nil
       end
-      call_hook(:reload)
+      call_hook :reload, @compile_id
     end
 
     def process_sync_exec(str, result_get = true)
@@ -43,7 +44,7 @@ module Rascut
     def close
       if @process
         @process.close
-        call_hook(:close)
+        call_hook :close
       end
     end
 
@@ -76,14 +77,22 @@ module Rascut
         end
         logger.info out
         if out.match(/bytes\)/)
-          call_hook :compile_success
+          call_hook :compile_success, out
+        else
+          call_hook :compile_error, out
         end
-        call_hook :compile
+        call_hook :compile, out
       end
     end
 
-    def call_hook(name)
-      @hooks[name].call if @hooks[name]
+    def call_hook(name, *args)
+      @hooks[name].each do |hook|
+        if hook.arity == 0 || args.length == 0
+          hook.call
+        else
+          hook.call(*args)
+        end
+      end
     end
 
     def read_result(process)
