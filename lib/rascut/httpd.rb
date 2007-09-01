@@ -196,11 +196,11 @@ module Rascut
     end
 
     def swftag(target_script, options)
-      name = output_file(options[:compile_options]) || target_script
+      name = output_file(options[:compile_config]) || target_script
       name = File.basename(name, '.*')
       swf = "/swf/#{name}.swf"
-      height, width = wh_parse options[:compile_options]
-      bgcol = bg_parse options[:compile_options]
+      height, width = wh_parse options[:compile_config]
+      bgcol = bg_parse options[:compile_config]
       # %Q[new SWFObject("#{swf}?#{Time.now.to_i}#{Time.now.usec}", "#{name}", "#{width}", "#{height}", '9', '#{bgcol}');]
       %Q[new SWFObject("#{swf}?" + (new Date()).getTime(), "idswf", "#{width}", "#{height}", '9', '#{bgcol}');]
     end
