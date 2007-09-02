@@ -1,6 +1,5 @@
 # -*- ruby -*-
 
-require 'logger'
 require 'rubygems'
 require 'hoe'
 $LOAD_PATH << './lib'
