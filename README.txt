@@ -19,6 +19,7 @@ Rascut is Ruby ActionSCript UTility :D
 * hoe
 * rack
 * mongrel
+* rake
 
 == INSTALL:
 
