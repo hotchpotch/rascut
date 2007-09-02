@@ -55,6 +55,23 @@ module Rascut
       @update_handlers.delete_if {|h| h == handler}
     end
 
+    def stop
+      @th.kill
+    end
+
+    def observe(files)
+      Array(files).each do |file|
+        file = Pathname.new(file)
+        if file.directory?
+          dir_observe file
+        else
+          next if @options[:ignore_files].include?(file.realpath)
+
+          file_observe file
+        end
+      end
+    end
+
     private
 
     def update_check
@@ -121,23 +138,6 @@ module Rascut
       end
     end
     
-    def stop
-      @th.kill
-    end
-
-    def observe(files)
-      Array(files).each do |file|
-        file = Pathname.new(file)
-        if file.directory?
-          dir_observe file
-        else
-          next if @options[:ignore_files].include?(file.realpath)
-
-          file_observe file
-        end
-      end
-    end
-
     def file_observe(file, mtime = nil)
       if @options[:ext]
         if @options[:ext].include? file.extname.sub(/^\./, '')

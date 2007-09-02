@@ -1,32 +1,37 @@
 rascut
-    by FIX (your name)
-    FIX (url)
+    by Yuichi Tateno
 
 == DESCRIPTION:
   
-FIX (describe your package)
+Rascut is Ruby ActionSCript UTility :D
 
 == FEATURES/PROBLEMS:
   
-* FIX (list of features or problems)
 
 == SYNOPSIS:
 
-  FIX (code sample of usage)
+* 1. flex2sdk and fcwrap setting.
+* 2. $ rascut -s MyScript.as
+* 3. Browser access http://localhost:3001/
 
 == REQUIREMENTS:
 
-* FIX (list of requirements)
+* hoe
+* rack
+* mongrel
 
 == INSTALL:
 
-* FIX (sudo gem install, anything else)
+* gem install rascut
+
+== OTHER:
+* vendor/js/swfobject.js is SWFObject by http://blog.deconcept.com/swfobject/
 
 == LICENSE:
 
 (The MIT License)
 
-Copyright (c) 2007 FIX
+Copyright (c) 2007 Yuichi Tateno
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
@@ -46,3 +51,8 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+== SPECIAL THANKS
+Thank you feedback!
+
+id:os0x, yugui, id:wanpark, saqoosha, id:ameema

@@ -11,7 +11,7 @@ class FileObserverTest < Test::Unit::TestCase
     @tmpdir = Pathname.new(Dir.tmpdir).join('test_file_observer_' + Time.now.to_i.to_s)
     @tmpdir.mkpath
 
-    @fo = Rascut::FileObserver.new(@tmpdir.to_s, :interval => 1)
+    @fo = Rascut::FileObserver.new(@tmpdir.to_s, :interval => 1, :dir_counter => 0)
     @update_files = []
 
     @fo.add_update_handler method(:save_files)
