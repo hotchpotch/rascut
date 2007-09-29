@@ -25,7 +25,7 @@ module Rascut
         @config.merge_config home.join('.rascutrc')
       end
 
-      if File.readable?('.rascut')
+      if File.readable?('.rascut') && File.file?('.rascut') 
         @config.merge_config('.rascut')
       end
 

@@ -53,6 +53,7 @@ module Rascut
         @params[:observe_files] << '.'
       end
 
+      op.on('-h', '--help', 'show this message') { puts op; Kernel::exit 1 }
       op.on('-i=VAL', '--interval=VAL', 'interval time(min)') {|v| @params[:interval] = v.to_i }
       op.on('-l=VAL', '--log=VAL', 'showing flashlog.txt') {|v| @params[:flashlog] = v }
       op.on('-m=VAL', '--mapping=VAL', 'server mapping path :example) -m "../assets=assets" -m "../images/=img"') {|v| 
@@ -70,7 +71,10 @@ module Rascut
       }
       op.on('-t=VAL', '--template=VAL', 'server use template file') {|v| @params[:template] = v }
       op.on('-v', '--verbose', 'detail messages') {|v| @params[:logger].level = Logger::DEBUG }
-      op.on('--help', 'show this message') { puts op; Kernel::exit 1 }
+      op.on('--version', 'show version') {|v| 
+        puts "rascut #{Rascut::VERSION}"
+        exit 0
+      }
       op.parse! argv
       @params[:logger].debug 'config' + @params.inspect
     end

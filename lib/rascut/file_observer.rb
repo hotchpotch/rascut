@@ -13,6 +13,8 @@ module Rascut
       :ext => nil
     }
 
+    MSWIN32 = !!RUBY_PLATFORM.include?('mswin32')
+
     def initialize(files, options)
       @files = {}
       @dirs = {}
@@ -112,7 +114,14 @@ module Rascut
     def check_dirs
       dfiles = []
       @dirs.each do |dir, mtime|
-        next if @options[:ignore_dirs].include?(dir.realpath)
+        begin
+          rp = dir.realpath.to_s
+        rescue Errno::EINVAL
+          rp = dir.realpath(false).to_s
+          rp.sub!(/^\//, '') if mswin32? # XXX for mswin32 ruby 1.8.4
+        end
+
+        next if @options[:ignore_dirs].include?(rp)
 
         if !dir.directory?
           @dirs.delete dir
@@ -152,9 +161,14 @@ module Rascut
       Find::find(dir.to_s) do |file|
         if File.directory?(file)
           dir = Pathname.new(file)
-          @dirs[dir] ||= dir.mtime
+          #@dirs[dir] ||= dir.mtie
+          @dirs[dir] ||= Time.at(0) # XXX for win32 ruby(filesystem?)?
         end
       end
+    end
+
+    def mswin32?
+      MSWIN32
     end
   end
 end 

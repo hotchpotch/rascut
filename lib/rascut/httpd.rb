@@ -206,10 +206,10 @@ module Rascut
     end
 
     def bg_parse(opt)
-      if m = opt.to_s.match(/-default-background-color=0x([a-fA-F0-9]{3,6})/)
+      if m = opt.to_s.match(/-default-background-color=(?:(?:0x)|#)([a-fA-F0-9]{3,6})/)
         '#' + m[1]
       else
-        '#ffffff'
+        ''
       end
     end
 
@@ -246,14 +246,15 @@ module Rascut
       <!--__RELOAD__-->
     </head>
     <body>
-      <div id="content">
-      </div>
+      <div id="content"></div>
 
       <script type="text/javascript">
        var so = __SWFOBJECT__;
-       __SWF_VARS__
-       so.addVariable('rascut', 'true');
-       so.write("content");
+       window.onload = function() {
+         __SWF_VARS__
+         so.addVariable('rascut', 'true');
+         so.write("content");
+       }
       </script>
     </body>
 </html>
@@ -295,6 +296,10 @@ module Rascut
           }
         } 
         x.send(null);
+    }
+
+    Rascut.swf = function() {
+       return document.getElementById('idswf');
     }
 
     Rascut.reloadObserver();
