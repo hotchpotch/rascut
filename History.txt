@@ -1,3 +1,8 @@
+== 0.1.2 / 2007-09-27
+* Append commandline --version option
+* Fix file observer for win32(winXP). thx ameema
+* Fix httpd compileoption bug
+
 == 0.1.0 / 2007-09-02
 
 * 1st Release.
