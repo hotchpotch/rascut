@@ -35,15 +35,15 @@ module Rascut
     def process_sync_exec(str, result_get = true)
       res = nil
       @mutex.synchronize do
-        @process.puts str
-        res = read_result(@process) if result_get
+        process.puts str
+        res = read_result(process) if result_get
       end
       res
     end
 
     def close
-      if @process
-        @process.close
+      if process
+        process.close
         call_hook :close
       end
     end
@@ -58,13 +58,22 @@ module Rascut
       cmd
     end
 
+    def process
+      unless @process
+        orig_lang = ENV['LANG']
+        ENV['LANG'] = 'C' # for flex3 sdk beta locale
+        @process = IO.popen(@config[:fcsh_cmd] + ' 2>&1', 'r+') unless @process
+        ENV['LANG'] = orig_lang
+      end
+      @process
+    end
+
     def compile
       return false if @compile_mutex.locked?
 
       @compile_mutex.synchronize do
         logger.info "Compile Start"
         out = nil
-        @process = IO.popen(@config[:fcsh_cmd] + ' 2>&1', 'r+') unless @process
         if @compile_id
           out = process_sync_exec "compile #{@compile_id}"
         else
