@@ -18,16 +18,22 @@ module Rascut
       def initialize(logger = nil)
         @logger = Logger.new(STDOUT)
         @logger.level = Logger::DEBUG
+        @asdoc = 'asdoc'
+      end
+      attr_accessor :asdoc
+
+      def generate_asdoc(source_path)
+          @logger.info "generate documents: #{source_path}"
+          cmd = "#{asdoc} -doc-sources '#{source_path}' -output '#{asdoc_home.join(path_escape(source_path.to_s))}'"
+          @logger.debug cmd
+          `#{cmd}`
       end
 
-      def generate_asdoc(flex_config, asdoc_cmd = 'asdoc')
+      def generate_asdoc_by_config(flex_config)
         source = Hpricot(flex_config)
         files = source.search('source-path path-element').map {|el| Pathname.new(el.inner_text) }
         files.each do |file|
-          @logger.info "generage documents: #{file}"
-          cmd = "#{asdoc_cmd} -source-path '#{file.realpath}' -doc-sources '#{file.realpath}' -output '#{asdoc_home.join(path_escape(file.realpath.to_s))}'"
-          @logger.debug cmd
-          `#{cmd}`
+          generate_asdoc file.realpath
         end
       end
 
@@ -69,7 +75,10 @@ end
 if __FILE__ == $0
   include Rascut::Asdoc
   flex_config = '/home/gorou/local/flex2/frameworks/flex-config.xml'
-  g = Generator.new #(open(flex_config).read, '/home/gorou/local/flex3/bin/asdoc')
+  g = Generator.new #
+  g.asdoc = '/home/gorou/local/flex3/bin/asdoc'
+  g.generate_asdoc_by_config(open(flex_config).read)
+  #g.generate_asdoc('/home/gorou/svn/as3/swfassist/src')
   g.generate_list
 end
 

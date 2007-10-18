@@ -14,16 +14,6 @@ module Rascut
   class Httpd
     include Utils
 
-    class ProcHandler < Mongrel::HttpHandler
-      def initialize(&block)
-        @proc = block
-      end
-
-      def process(req, res)
-        @proc.call(req, res)
-      end
-    end
-
     def initialize(command)
       @command = command
       @http_servet = 
@@ -140,7 +130,6 @@ module Rascut
 
     def proxy_handler
       ProcHandler.new do |req, res|
-        require 'pp'
         url = req.params['QUERY_STRING']
         if url.empty?
           url = req.path_info[1..-1].gsub(%r{^(https?:/)/?}, '\\1/')

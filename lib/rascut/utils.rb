@@ -1,6 +1,8 @@
 require 'pathname'
 require 'uri'
 require 'pstore'
+require 'rubygems'
+require 'mongrel/handlers'
 
 module Rascut
   module Utils
@@ -48,5 +50,15 @@ module Rascut
       URI.encode(name.to_s.gsub('/', '_'), /[^\w_\-]/)
     end
     module_function :path_escape
+
+    class ProcHandler < Mongrel::HttpHandler
+      def initialize(&block)
+        @proc = block
+      end
+
+      def process(req, res)
+        @proc.call(req, res)
+      end
+    end
   end
 end
