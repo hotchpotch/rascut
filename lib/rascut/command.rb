@@ -23,7 +23,7 @@ module Rascut
       end
 
       if File.readable?('.rascut') && File.file?('.rascut') 
-        @config.merge_config('.rascut')
+        config.merge_config('.rascut')
       end
 
       @config.parse_argv!(argv)
@@ -108,7 +108,7 @@ module Rascut
     def start_server
       require 'rascut/httpd'
       @httpd = Httpd.new(self)
-      @httpd.start
+      @httpd.run
     end
 
     def setting_signals
@@ -136,6 +136,7 @@ module Rascut
       logger.info 'exiting...'
       begin
         @wrapper.close 
+        @httpd.stop if @httpd
       rescue Exception => e
         logger.error e.inspect
       end

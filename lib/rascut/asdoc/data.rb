@@ -46,7 +46,8 @@ if __FILE__ == $0
   Benchmark.bm do |x|
     x.report {
       100.times {
-      res.select{|i| i[:name].index('draw') == 0 }
+         p = []
+         res.select{|i| i[:name].index('draw') == 0 }
      }
     }
     x.report {

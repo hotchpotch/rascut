@@ -1,16 +1,7 @@
 
-begin
-  require 'rack'
-rescue LoadError
-  require 'rubygems'
-  gem 'rack'
-end
-
-require 'rack/showexceptions'
-require 'rack/urlmap'
-require 'rack/file'
-require 'rack/request'
-require 'rack/response'
+require 'rubygems'
+require 'mongrel'
+require 'mongrel/handlers'
 
 require 'rascut/utils'
 require 'rascut/asdoc/data'
@@ -22,98 +13,57 @@ require 'open-uri'
 module Rascut
   class Httpd
     include Utils
-    class FileOnly < Rack::File
-      def _call(env)
-        if env["PATH_INFO"].include? ".."
-          return [403, {"Content-Type" => "text/plain"}, ["Forbidden\n"]]
-        end
 
-        @path = env["PATH_INFO"] == '/' ? @root : F.join(@root, env['PATH_INFO'])
-        ext = F.extname(@path)[1..-1]
+    class ProcHandler < Mongrel::HttpHandler
+      def initialize(&block)
+        @proc = block
+      end
 
-        if F.file?(@path) && F.readable?(@path)
-          [200, {
-            "Content-Type"   => MIME_TYPES[ext] || "text/plain",
-            "Content-Length" => F.size(@path).to_s
-          }, self]
-        else
-          return [404, {"Content-Type" => "text/plain"},
-            ["File not found: #{env["PATH_INFO"]}\n"]]
-        end
+      def process(req, res)
+        @proc.call(req, res)
       end
     end
-
-    class FileIndex < Rack::File
-      def _call(env)
-        if env["PATH_INFO"].include? ".."
-          return [403, {"Content-Type" => "text/plain"}, ["Forbidden\n"]]
-        end
-
-        @path = F.join(@root, env["PATH_INFO"])
-        @path << '/index.html' if F.readable?(@path + '/index.html')
-        @path.sub!(/\/$/, '')
-
-        ext = F.extname(@path)[1..-1]
-
-        if F.file?(@path) && F.readable?(@path)
-          [200, {
-            "Content-Type"   => MIME_TYPES[ext] || "text/plain",
-            "Content-Length" => F.size(@path).to_s
-          }, self]
-        else
-          return [404, {"Content-Type" => "text/plain"},
-            ["File not found: #{env["PATH_INFO"]}\n"]]
-        end
-      end
-    end
-
-
 
     def initialize(command)
       @command = command
+      @http_servet = 
       @threads = []
     end
     attr_reader :command
 
-    def start
+    def run 
       swf_path = command.root.to_s
       logger.debug "swf_path: #{swf_path}"
       vendor = Pathname.new(__FILE__).parent.parent.parent.join('vendor')
       logger.debug "vendor_path: #{vendor}"
-      reload = reload_handler
-      index = index_handler
 
-      #app = Rack::FixedBuilder.new do
-      #  use Rack::ShowExceptions
-      #  map('/reload') { run reload }
-      #  map('/swf/') { run Rack::File.new(swf_path) }
-      #  map('/') { run index }
-      #end
+      file_mappings = [
+        ['/js/swfobject.js', vendor.join('js/swfobject.js').to_s],
+        ['/swf', swf_path]
+      ]
+      file_mappings.concat(config_url_mapping) if config[:mapping]
+      logger.debug 'url mappings: ' + file_mappings.inspect
 
-      urls = []
-      urls.concat(config_url_mapping) if config[:mapping]
-      urls.concat(asdoc_mapping)
-
-      urls.concat([
-        ['/js/swfobject.js', Rack::ShowExceptions.new(Httpd::FileOnly.new(vendor.join('js/swfobject.js').to_s))],
-        ['/swf', Rack::ShowExceptions.new(Rack::File.new(swf_path))],
-        ['/aaa', Rack::ShowExceptions.new(Rack::File.new('/home/gorou/.rascut/asdoc/_home_gorou_svn_as3_papervision3d_trunk_src'))],
-        ['/asdoc.json', Rack::ShowExceptions.new(asdoc_json_handler)],
-        ['/reload', Rack::ShowExceptions.new(reload_handler)],
-        ['/proxy', Rack::ShowExceptions.new(proxy_handler)],
-        ['/', Rack::ShowExceptions.new(index_handler)]
-      ])
-      logger.debug 'url mappings: ' + urls.map{|u| u.first}.inspect
-      app = Rack::URLMap.new(urls)
       port = config[:port] || 3001
       host = config[:bind_address] || '0.0.0.0'
 
-      _args = [app, {:Host => host, :Port => port}]
-      server_handler = detect_server
-      Thread.new(_args) do |args|
-        server_handler.run *args
+      reload = reload_handler
+      index = index_handler
+
+      @http_server = Mongrel::HttpServer.new(host, port)
+      file_mappings.each do |mapping|
+        @http_server.register(mapping[0], Mongrel::DirHandler.new(mapping[1]))
       end
-      logger.info "Start #{server_handler} http://#{host}:#{port}/"
+      @http_server.register('/proxy', proxy_handler)
+      @http_server.register('/reload', reload_handler)
+      @http_server.register('/', index_handler)
+      @http_server.run
+      logger.info "Start Mongrel: http://#{host}:#{port}/"
+    end
+
+    def stop
+      # XXX
+      # @http_server.stop
     end
 
     def config
@@ -137,61 +87,34 @@ module Rascut
         filepath = m[0]
         mappath = m[1]
         mappath = '/' + mappath if mappath[0..0] != '/'
-        urls << [mappath, Rack::ShowExceptions.new(Rack::File.new(command.root.join(filepath).to_s))]
+        urls << [mappath, command.root.join(filepath).to_s]
       end
       urls
     end
 
-    def asdoc_mapping
-      urls = []
-      Pathname.glob(asdoc_home.to_s + '/*').each do |file|
-        urls << ["/asdoc/#{file.basename}", Rack::ShowExceptions.new(FileIndex.new(file.to_s))]
-      end
-      urls << ["/asdoc/", Rack::ShowExceptions.new(FileIndex.new(asdoc_home.to_s))]
-      urls
-    end
-
-    def detect_server
-      begin 
-        case config[:server]
-        when 'mongrel'
-          require_mongrel_handler
-        when 'webrick'
-          require_webrick_handler
-        else
-          require_mongrel_handler
-        end
-      rescue Exception => e
-        require_webrick_handler
-      end
-    end
-
-    def require_mongrel_handler
-      begin
-        require 'mongrel'
-      rescue LoadError
-        require 'rubygems'
-        gem 'mongrel', '> 1.0'
-      end
-      require 'rack/handler/mongrel'
-      Rack::Handler::Mongrel
-    end
-
-    def require_webrick_handler
-      require 'webrick'
-      require 'rack/handler/webrick'
-      Rack::Handler::WEBrick
-    end
+    #def asdoc_mapping
+    #  urls = []
+    #  Pathname.glob(asdoc_home.to_s + '/*').each do |file|
+    #    urls << ["/asdoc/#{file.basename}", Rack::ShowExceptions.new(FileIndex.new(file.to_s))]
+    #  end
+    #  urls << ["/asdoc/", Rack::ShowExceptions.new(FileIndex.new(asdoc_home.to_s))]
+    #  urls
+    #end
 
     def reload_handler
-      Proc.new do |env|
+      #Proc.new do |env|
+      ProcHandler.new do |req, res|
         @threads << Thread.current
         Thread.stop
 
         logger.debug 'httpd /reload reloading now'
-        Rack::Response.new.finish do |r|
-          r.write '1'
+        res.start do |head, out|
+          head["Content-Type"] = "text/plain"
+          out << 1
         end
+        #Rack::Response.new.finish do |r|
+        #  r.write '1'
+        #end
       end
     end
 
@@ -202,54 +125,33 @@ module Rascut
         res = INDEX.sub('__SWFOBJECT__', swftag(command.target_script, config)).sub('<!--__RELOAD__-->', RELOAD_SCRIPT)
       end
 
-      Proc.new do |env|
-        req = Rack::Request.new(env)
-        res.sub!('__SWF_VARS__', swfvars(req.GET))
-        Rack::Response.new.finish do |r|
-          r.write res
+      ProcHandler.new do |req, response|
+      #Proc.new do |env|
+      #req = Rack::Request.new(env)
+        res.sub!('__SWF_VARS__', swfvars(req.params))
+        response.start do |head, out|
+          out << res
         end
+        #Rack::Response.new.finish do |r|
+        #  r.write res
+        #end
       end
     end
 
     def proxy_handler
-      Proc.new do |env|
-        req = Rack::Request.new(env)
-        url = req.query_string
+      ProcHandler.new do |req, res|
+        require 'pp'
+        url = req.params['QUERY_STRING']
         if url.empty?
           url = req.path_info[1..-1].gsub(%r{^(https?:/)/?}, '\\1/')
         end
-        Rack::Response.new.finish do |r|
+        res.start do |head, out|
           open(url) { |io|
-            r['Content-Type'] = io.content_type
+            head['Content-Type'] = io.content_type
             while part = io.read(8192)
-              r.write part
+              out << part
             end
           }
-        end
-      end
-    end
-
-    def asdoc_json_handler
-      @asdoc_data ||= Rascut::Asdoc::Data.asdoc_data
-      require 'json'
-
-      Proc.new do |env|
-        req = Rack::Request.new(env)
-        word = req['word']
-        ary = []
-        @asdoc_data.each do |i| 
-          if i[:name].match(/^#{word}/)
-            ary << i
-            break if ary.length >= 30
-          end
-        end
-
-        Rack::Response.new.finish do |r|
-          r['Content-Type'] = 'text/plain'
-          r.write ary.to_json
-          #while part = io.read(8192)
-          #  r.write part
-          #end
         end
       end
     end
