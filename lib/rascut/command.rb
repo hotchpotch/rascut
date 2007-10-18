@@ -2,11 +2,14 @@ require 'optparse'
 require 'rascut/fcsh_wrapper'
 require 'rascut/logger'
 require 'rascut/config'
+require 'rascut/utils'
 require 'pathname'
 require 'yaml'
 
 module Rascut
   class Command
+    include Utils
+
     def initialize
       @logger = Logger.new(STDOUT)
     end
@@ -14,12 +17,6 @@ module Rascut
 
     def run(argv)
       @config = Config.new
-
-      if ENV['HOME']
-        home = Pathname.new ENV['HOME']
-      end
-
-      home.join('.rascut').mkpath if home
 
       if home && home.join('.rascutrc').readable?
         @config.merge_config home.join('.rascutrc')

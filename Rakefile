@@ -108,7 +108,7 @@ end
 
 desc "Publish to RubyForge"
 task :rubyforge => [:rdoc, :package] do
-  Rake::RubyForgePublisher.new(RUBYFORGE_PROJECT, 'gorou').upload
+  Rake::RubyForgePublisher.new(RUBYFORGE_PROJECT, 'secondlife').upload
 end
 
 desc 'Package and upload the release to rubyforge.'
@@ -117,6 +117,7 @@ task :release => [:clean, :package] do |t|
   abort "Versions don't match #{v} vs #{VERS}" unless v == VERS
   pkg = "pkg/#{NAME}-#{VERS}"
 
+  require 'rubyforge'
   rf = RubyForge.new
   puts "Logging in"
   rf.login

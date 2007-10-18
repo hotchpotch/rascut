@@ -11,6 +11,9 @@ require 'rack/urlmap'
 require 'rack/file'
 require 'rack/request'
 require 'rack/response'
+
+require 'rascut/utils'
+require 'rascut/asdoc/data'
 require 'thread'
 require 'logger'
 require 'pathname'
@@ -18,6 +21,7 @@ require 'open-uri'
 
 module Rascut
   class Httpd
+    include Utils
     class FileOnly < Rack::File
       def _call(env)
         if env["PATH_INFO"].include? ".."
@@ -38,6 +42,32 @@ module Rascut
         end
       end
     end
+
+    class FileIndex < Rack::File
+      def _call(env)
+        if env["PATH_INFO"].include? ".."
+          return [403, {"Content-Type" => "text/plain"}, ["Forbidden\n"]]
+        end
+
+        @path = F.join(@root, env["PATH_INFO"])
+        @path << '/index.html' if F.readable?(@path + '/index.html')
+        @path.sub!(/\/$/, '')
+
+        ext = F.extname(@path)[1..-1]
+
+        if F.file?(@path) && F.readable?(@path)
+          [200, {
+            "Content-Type"   => MIME_TYPES[ext] || "text/plain",
+            "Content-Length" => F.size(@path).to_s
+          }, self]
+        else
+          return [404, {"Content-Type" => "text/plain"},
+            ["File not found: #{env["PATH_INFO"]}\n"]]
+        end
+      end
+    end
+
+
 
     def initialize(command)
       @command = command
@@ -62,10 +92,13 @@ module Rascut
 
       urls = []
       urls.concat(config_url_mapping) if config[:mapping]
+      urls.concat(asdoc_mapping)
 
       urls.concat([
         ['/js/swfobject.js', Rack::ShowExceptions.new(Httpd::FileOnly.new(vendor.join('js/swfobject.js').to_s))],
         ['/swf', Rack::ShowExceptions.new(Rack::File.new(swf_path))],
+        ['/aaa', Rack::ShowExceptions.new(Rack::File.new('/home/gorou/.rascut/asdoc/_home_gorou_svn_as3_papervision3d_trunk_src'))],
+        ['/asdoc.json', Rack::ShowExceptions.new(asdoc_json_handler)],
         ['/reload', Rack::ShowExceptions.new(reload_handler)],
         ['/proxy', Rack::ShowExceptions.new(proxy_handler)],
         ['/', Rack::ShowExceptions.new(index_handler)]
@@ -106,6 +139,15 @@ module Rascut
         mappath = '/' + mappath if mappath[0..0] != '/'
         urls << [mappath, Rack::ShowExceptions.new(Rack::File.new(command.root.join(filepath).to_s))]
       end
+      urls
+    end
+
+    def asdoc_mapping
+      urls = []
+      Pathname.glob(asdoc_home.to_s + '/*').each do |file|
+        urls << ["/asdoc/#{file.basename}", Rack::ShowExceptions.new(FileIndex.new(file.to_s))]
+      end
+      urls << ["/asdoc/", Rack::ShowExceptions.new(FileIndex.new(asdoc_home.to_s))]
       urls
     end
 
@@ -183,6 +225,31 @@ module Rascut
               r.write part
             end
           }
+        end
+      end
+    end
+
+    def asdoc_json_handler
+      @asdoc_data ||= Rascut::Asdoc::Data.asdoc_data
+      require 'json'
+
+      Proc.new do |env|
+        req = Rack::Request.new(env)
+        word = req['word']
+        ary = []
+        @asdoc_data.each do |i| 
+          if i[:name].match(/^#{word}/)
+            ary << i
+            break if ary.length >= 30
+          end
+        end
+
+        Rack::Response.new.finish do |r|
+          r['Content-Type'] = 'text/plain'
+          r.write ary.to_json
+          #while part = io.read(8192)
+          #  r.write part
+          #end
         end
       end
     end
