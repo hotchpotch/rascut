@@ -10,6 +10,7 @@ module Rascut
       if ENV['HOME']
         home = Pathname.new ENV['HOME']
       elsif ENV['USERPROFILE']
+        # win32
         home = Pathname.new ENV['USERPROFILE']
       else
         raise 'HOME dir not found.'

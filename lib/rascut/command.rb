@@ -12,14 +12,15 @@ module Rascut
 
     def initialize
       @logger = Logger.new(STDOUT)
+      @httpd = nil
     end
     attr_accessor :logger
 
     def run(argv)
       @config = Config.new
 
-      if home && home.join('.rascutrc').readable?
-        @config.merge_config home.join('.rascutrc')
+      if home.parent && home.parent.join('.rascutrc').readable?
+        @config.merge_config home.parent.join('.rascutrc')
       end
 
       if File.readable?('.rascut') && File.file?('.rascut') 

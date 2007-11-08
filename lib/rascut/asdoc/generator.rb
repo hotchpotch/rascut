@@ -77,8 +77,8 @@ if __FILE__ == $0
   flex_config = '/home/gorou/local/flex2/frameworks/flex-config.xml'
   g = Generator.new #
   g.asdoc = '/home/gorou/local/flex3/bin/asdoc'
-  g.generate_asdoc_by_config(open(flex_config).read)
-  #g.generate_asdoc('/home/gorou/svn/as3/swfassist/src')
+  #g.generate_asdoc_by_config(open(flex_config).read)
+  g.generate_asdoc('/home/gorou/svn/as3/swfassist/src')
   g.generate_list
 end
 

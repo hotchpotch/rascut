@@ -45,6 +45,7 @@ module Rascut
         @http_server.register(mapping[0], Mongrel::DirHandler.new(mapping[1]))
       end
       @http_server.register('/proxy', proxy_handler)
+      @http_server.register('/save', save_handler)
       @http_server.register('/reload', reload_handler)
       @http_server.register('/', index_handler)
       @http_server.run
@@ -118,9 +119,9 @@ module Rascut
       ProcHandler.new do |req, response|
       #Proc.new do |env|
       #req = Rack::Request.new(env)
-        res.sub!('__SWF_VARS__', swfvars(req.params))
+        r = res.sub('__SWF_VARS__', swfvars(Mongrel::HttpRequest.query_parse(req.params['QUERY_STRING'])))
         response.start do |head, out|
-          out << res
+          out << r
         end
         #Rack::Response.new.finish do |r|
         #  r.write res
@@ -130,7 +131,7 @@ module Rascut
 
     def proxy_handler
       ProcHandler.new do |req, res|
-        url = req.params['QUERY_STRING']
+        url = req.params['QUERY_STRING'].to_s.strip
         if url.empty?
           url = req.path_info[1..-1].gsub(%r{^(https?:/)/?}, '\\1/')
         end
@@ -142,6 +143,30 @@ module Rascut
             end
           }
         end
+      end
+    end
+
+    def save_handler
+      ProcHandler.new do |req, res|
+        name = req.params['QUERY_STRING'].to_s.strip
+        path = command.root.join(name)
+        req.body.rewind
+        body = req.body.read
+
+        if name.empty? || body.length == 0
+          res.start do |head, out|
+            head['Content-Type'] = 'text/plain'
+            out << "don't save"
+          end
+        else
+          path.open('w') {|f| f.puts body }
+
+          res.start do |head, out|
+            head['Content-Type'] = 'text/plain'
+            out << "saved: #{path}"
+          end
+        end
+
       end
     end
 
