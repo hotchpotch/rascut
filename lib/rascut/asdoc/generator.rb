@@ -27,6 +27,7 @@ module Rascut
           cmd = "#{asdoc} -doc-sources '#{source_path}' -output '#{asdoc_home.join(path_escape(source_path.to_s))}'"
           @logger.debug cmd
           `#{cmd}`
+          generate_list_by_source_path(source_path)
       end
 
       def generate_asdoc_by_config(flex_config)
@@ -37,9 +38,14 @@ module Rascut
         end
       end
 
-      def generate_list
+      def generate_list_by_source_path(source_path)
+          generate_list(path_escape(source_path.to_s))
+      end
+
+      def generate_list(path)
         @logger.info "generate list"
-        Pathname.glob("#{asdoc_home}/*").each do |asdoc|
+        #Pathname.glob("#{asdoc_home}/#{asdoc_dir}").each do |asdoc|
+        asdoc = asdoc_home.join(path)
           @logger.info "#{asdoc}"
           Pathname.glob("#{asdoc}/*/**/*.html") do |file|
             next if file.to_s.match(/((class-list.html)|(package-detail.html))$/)
@@ -59,7 +65,7 @@ module Rascut
               db[:asdoc][list[:asdoc_dir]] << list
             end
           end
-        end
+        #end
         #generate_json
       end
 
@@ -78,7 +84,9 @@ if __FILE__ == $0
   g = Generator.new #
   g.asdoc = '/home/gorou/local/flex3/bin/asdoc'
   #g.generate_asdoc_by_config(open(flex_config).read)
-  g.generate_asdoc('/home/gorou/svn/as3/swfassist/src')
-  g.generate_list
+  #asdoc_dir = '/home/gorou/svn/as3/swfassist/src'
+  asdoc_dir = '/home/gorou/svn/as3rails2u/trunk/src'
+  #g.generate_asdoc(asdoc_dir)
+  g.generate_list_by_source_path asdoc_dir
 end
 

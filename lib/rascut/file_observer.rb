@@ -29,6 +29,7 @@ module Rascut
       observe files
     end
     attr_accessor :options
+    attr_reader :files, :dirs
 
     def logger
       options[:logger]
