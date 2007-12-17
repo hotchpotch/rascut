@@ -62,8 +62,11 @@ module Rascut
       unless @process
         orig_lang = ENV['LANG']
         ENV['LANG'] = 'C' # for flex3 sdk beta locale
+        orig_java_options = ENV['_JAVA_OPTIONS']
+        ENV['_JAVA_OPTIONS'] = orig_java_options.to_s + ' -Duser.language=en'
         @process = IO.popen(@config[:fcsh_cmd] + ' 2>&1', 'r+') unless @process
         ENV['LANG'] = orig_lang
+        ENV['_JAVA_OPTIONS'] = orig_java_options
       end
       @process
     end
