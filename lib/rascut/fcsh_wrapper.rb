@@ -76,6 +76,7 @@ module Rascut
 
       @compile_mutex.synchronize do
         logger.info "Compile Start"
+        call_hook :compile_start
         out = nil
         if @compile_id
           out = process_sync_exec "compile #{@compile_id}"
@@ -93,7 +94,7 @@ module Rascut
         else
           call_hook :compile_error, out
         end
-        call_hook :compile, out
+        call_hook :compile_finish
       end
     end
 
