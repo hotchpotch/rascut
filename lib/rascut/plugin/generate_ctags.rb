@@ -1,6 +1,8 @@
 # append your ~/.ctags 
-# --regex-actionscript=/^.*function[\t ]+([gs]et[\t ]+)?([A-Za-z0-9_]+)[\t ]*\(/\2/I,inner/i
-# --regex-actionscript=/^.*class[\t ]+([A-Za-z0-9_]+)/\1/I,inner/i
+# --langdef=actionscript
+# --langmap=actionscript:.as
+# --regex-actionscript=/^.*function[\t ]+([gs]et[\t ]+)?([A-Za-z0-9_]+)[\t ]*\(/\2/F,function/i
+# --regex-actionscript=/^.*class[\t ]+([A-Za-z0-9_]+)/\1/C,class/i
 #
 require 'rascut/plugin/base'
 require 'pathname'
@@ -14,7 +16,7 @@ module Rascut
       end
 
       def generate_ctags
-        `#{@ctags_cmd} -f #{@command.root.join('tags')} #{@command.root}/**/*.as #{@command.root}/**.as`
+        `#{@ctags_cmd} -R --langmap=actionscript:.as -f #{@command.root.join('tags')}`
       end
     end
   end
