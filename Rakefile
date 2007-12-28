@@ -9,7 +9,8 @@ require 'rake/contrib/rubyforgepublisher'
 require 'fileutils'
 include FileUtils
 
-require  'lib/rascut'
+$LOAD_PATH.unshift "lib"
+require  'rascut'
 
 AUTHOR = "Yuichi Tateno"
 EMAIL = "hotchpotch@nospam@gmail.com"
