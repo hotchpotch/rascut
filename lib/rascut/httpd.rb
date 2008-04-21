@@ -236,6 +236,8 @@ module Rascut
        window.onload = function() {
          __SWF_VARS__
          so.addVariable('rascut', 'true');
+         so.addParam('allowFullScreen', 'true');
+         so.addParam('allowScriptAccess', 'always');
          so.write("content");
        }
       </script>

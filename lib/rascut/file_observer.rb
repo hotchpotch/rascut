@@ -126,7 +126,7 @@ module Rascut
 
         if !dir.directory?
           @dirs.delete dir
-        elsif dir.to_s.match %r{/\.svn|/CVS}
+        elsif dir.to_s.match %r{/\.svn|/CVS|\.git}
           @dirs.delete dir
         elsif dir.mtime > mtime
           @dirs[dir] = dir.mtime
