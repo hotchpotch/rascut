@@ -1,4 +1,3 @@
-(in /home/gorou/git/rascut)
 Gem::Specification.new do |s|
   s.name = %q{rascut}
   s.version = "0.2.0"
