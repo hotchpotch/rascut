@@ -63,7 +63,7 @@ spec = Gem::Specification.new do |s|
 
   s.add_dependency('rake')
   s.add_dependency('mongrel')
-  s.add_dependency('json')
+  s.add_dependency('json_pure')
   s.required_ruby_version = '>= 1.8.2'
 
   s.files = %w(README ChangeLog Rakefile) +

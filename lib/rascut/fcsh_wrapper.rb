@@ -111,7 +111,12 @@ module Rascut
     def read_result(process)
       unless @not_first_read 
         # first_time, FIXME uncool...
-        process.expect(FCSH_WAIT_RE)
+        begin
+          process.expect(FCSH_WAIT_RE)
+        rescue NoMethodError => e
+          warn 'mxmlc not found. (check PATH)'
+          raise e
+        end
         @not_first_read = true
       end
       
