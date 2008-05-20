@@ -1,0 +1,25 @@
+#!/usr/bin/env ruby
+
+begin
+  require 'rascut/asdoc/data'
+  require 'rascut/asdoc/generator'
+rescue LoadError
+  require 'rubygems'
+  require 'rascut/asdoc/generator'
+end
+
+c = ARGV.shift
+
+case c
+when 'dict'
+  puts Rascut::Asdoc::Data.asdoc_dict
+when 'import_dict'
+  puts Rascut::Asdoc::Data.asdoc_import_dict
+when 'generate'
+  g = Rascut::Asdoc::Generator.new
+  g.asdoc = '/home/gorou/local/flex3/bin/asdoc'
+  g.generate_asdoc ARGV.shift
+else
+  puts 'rasdoc [dict import_dict generate]'
+  exit 1
+end
