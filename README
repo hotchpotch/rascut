@@ -16,14 +16,14 @@ Rascut is Ruby ActionSCript UTility :D
 
 == REQUIREMENTS:
 
-* hoe
-* rack
 * mongrel
 * rake
 
 == INSTALL:
 
 * gem install rascut
+ or
+* gem install hotchpotch-rascut
 
 == OTHER:
 * vendor/js/swfobject.js is SWFObject by http://blog.deconcept.com/swfobject/
@@ -56,4 +56,4 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 == SPECIAL THANKS
 Thank you feedback!
 
-id:os0x, yugui, id:wanpark, saqoosha, id:ameema
+id:os0x, yugui, id:wanpark, saqoosha, id:ameema, id:cho45
