@@ -1,3 +1,8 @@
+== 0.2.1 / 2009-03-03
+
+* not dependency rack. (using mongrel)
+* sum utils add.
+
 == 0.1.3 / 2007-10-09
 
 * Support new flex3 SDK beta version, maybe.
