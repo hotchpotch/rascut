@@ -1,3 +1,7 @@
+== 0.2.2 / 2011-09-02
+
+* Add glowl notification plugin. (require growlnotify)
+
 == 0.2.1 / 2009-03-03
 
 * not dependency rack. (using mongrel)
