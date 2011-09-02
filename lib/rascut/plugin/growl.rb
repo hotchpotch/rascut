@@ -5,7 +5,7 @@ module Rascut
     class Growl < Base
       def run
         @growl = `which growlnotify`.chomp
-        return unless @growl
+        return unless $?.success?
         @command.wrapper.hooks[:compile_error] << method(:error)
         @command.wrapper.hooks[:compile_success] << method(:success)
       end
