@@ -114,7 +114,7 @@ module Rascut
 
     def setting_signals
       methods(true).each do |mname|
-        if m = mname.match(/^sig_(.+)$/)
+        if m = mname.to_s.match(/^sig_(.+)$/)
           begin
             Signal.trap(m[1].upcase) { method(mname).call }
           rescue ArgumentError
